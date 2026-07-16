@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlowCal AI — Premium Calories Calculator & Tracker</title>
+  
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Background Gradients -->
+  <div class="glow-bg glow-primary"></div>
+  <div class="glow-bg glow-secondary"></div>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    
+    <!-- Navbar / Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <i class="fa-solid fa-fire-flame-curved"></i>
+        </div>
+        <div>
+          <h1>GlowCal <span class="badge-ai">AI</span></h1>
+          <p class="subtitle">Smart Nutrition Tracking</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="action-btn" title="Toggle Visual Style">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </button>
+        <button id="openSettingsBtn" class="action-btn" title="Open Settings">
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      
+      <!-- Left Panel: Summary & Analytics -->
+      <section class="panel-left">
+        <!-- Calorie Ring Progress Card -->
+        <div class="glass-card calorie-progress-card">
+          <h2 class="card-title">Daily Energy</h2>
+          
+          <div class="progress-container">
+            <svg class="progress-ring" width="220" height="220">
+              <!-- Define drop shadows & gradients -->
+              <defs>
+                <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#8b5cf6" />
+                  <stop offset="100%" stop-color="#06b6d4" />
+                </linearGradient>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              <circle class="progress-ring-bg" cx="110" cy="110" r="95"></circle>
+              <circle id="progressRingBar" class="progress-ring-bar" cx="110" cy="110" r="95" stroke="url(#ringGradient)"></circle>
+            </svg>
+            
+            <div class="progress-text">
+              <span id="caloriesRemainingVal" class="calories-main">2,000</span>
+              <span class="calories-label" id="caloriesSubtext">kcal left</span>
+            </div>
+          </div>
+
+          <div class="calorie-summary-details">
+            <div class="stat-col">
+              <span class="stat-number" id="caloriesGoalText">2000</span>
+              <span class="stat-label">Goal</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-col">
+              <span class="stat-number color-primary" id="caloriesEatenText">0</span>
+              <span class="stat-label">Eaten</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Macro Stats Card -->
+        <div class="glass-card macros-card">
+          <div class="macros-header">
+            <h2 class="card-title">Macronutrient Targets</h2>
+            <span id="activePresetBadge" class="preset-badge">Balanced</span>
+          </div>
+          
+          <div class="macro-list">
+            <!-- Protein -->
+            <div class="macro-item">
+              <div class="macro-info">
+                <span class="macro-name"><i class="fa-solid fa-egg macro-icon protein-color"></i> Protein</span>
+                <span class="macro-values"><strong id="proteinCurrent">0</strong> / <span id="proteinGoal">130</span>g</span>
+              </div>
+              <div class="bar-container">
+                <div class="bar-fill protein-bg" id="proteinBar" style="width: 0%"></div>
+              </div>
+            </div>
+            
+            <!-- Carbs -->
+            <div class="macro-item">
+              <div class="macro-info">
+                <span class="macro-name"><i class="fa-solid fa-wheat-awn macro-icon carbs-color"></i> Carbs</span>
+                <span class="macro-values"><strong id="carbsCurrent">0</strong> / <span id="carbsGoal">220</span>g</span>
+              </div>
+              <div class="bar-container">
+                <div class="bar-fill carbs-bg" id="carbsBar" style="width: 0%"></div>
+              </div>
+            </div>
+            
+            <!-- Fat -->
+            <div class="macro-item">
+              <div class="macro-info">
+                <span class="macro-name"><i class="fa-solid fa-droplet macro-icon fat-color"></i> Fats</span>
+                <span class="macro-values"><strong id="fatCurrent">0</strong> / <span id="fatGoal">70</span>g</span>
+              </div>
+              <div class="bar-container">
+                <div class="bar-fill fat-bg" id="fatBar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Water Tracker Card -->
+        <div class="glass-card water-tracker-card">
+          <h2 class="card-title"><i class="fa-solid fa-droplet header-icon text-water"></i> Hydration Log</h2>
+          <div class="water-widget">
+            <div class="water-glass-container">
+              <div class="water-glass">
+                <div class="water-fluid" id="waterFluid" style="height: 0%">
+                  <div class="wave"></div>
+                  <div class="wave"></div>
+                </div>
+                <div class="water-glass-inner-text">
+                  <span id="waterLoggedText" class="water-main-value">0</span>
+                  <span class="water-sub-label">/ <span id="waterTargetText">2000</span> ml</span>
+                </div>
+              </div>
+            </div>
+            <div class="water-actions-grid">
+              <button type="button" class="btn btn-secondary water-add-btn" data-amount="250">
+                <i class="fa-solid fa-glass-water"></i> +250ml
+              </button>
+              <button type="button" class="btn btn-secondary water-add-btn" data-amount="500">
+                <i class="fa-solid fa-wine-glass"></i> +500ml
+              </button>
+              <button type="button" id="resetWaterBtn" class="btn btn-text color-danger reset-water-btn" title="Reset hydration log">
+                <i class="fa-solid fa-rotate-left"></i> Reset Log
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Right Panel: Log Food & Food Journal -->
+      <section class="panel-right">
+        
+        <!-- Add Food Form Card -->
+        <div class="glass-card log-food-card">
+          <h2 class="card-title"><i class="fa-solid fa-circle-plus header-icon"></i> Log Food Entry</h2>
+          
+          <form id="foodForm" class="food-form" autocomplete="off">
+            <div class="form-grid">
+              
+              <!-- Search & Autocomplete Input -->
+              <div class="form-group span-2 input-relative">
+                <label for="foodInput">What did you eat?</label>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-magnifying-glass input-icon"></i>
+                  <input type="text" id="foodInput" placeholder="Type a food (e.g., Avocado Toast, Chicken Breast)..." required>
+                  <button type="button" id="clearInputBtn" class="clear-input-btn" style="display: none;">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+                
+                <!-- Autocomplete suggestions dropdown -->
+                <div id="autocompleteList" class="autocomplete-dropdown" style="display: none;">
+                  <!-- Suggestions populated dynamically -->
+                </div>
+              </div>
+
+              <!-- Portion / Quantity -->
+              <div class="form-group span-2">
+                <div class="portion-label-row">
+                  <label for="portionInput">Portion / Serving</label>
+                </div>
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-scale-balanced input-icon"></i>
+                  <input type="text" id="portionInput" placeholder="e.g. 1 medium, 150g, 1 plate" value="1 serving" required>
+                </div>
+                
+                <!-- Suggestions chips container -->
+                <div id="portionChipsContainer" class="portion-chips-container" style="display: none;">
+                  <span class="portion-chips-label"><i class="fa-solid fa-wand-magic-sparkles"></i> Standard Quantities:</span>
+                  <div id="portionChips" class="portion-chips-list">
+                    <!-- Quantity chips generated dynamically -->
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submitFoodBtn" class="btn btn-primary">
+              <span id="btnText">Log Food with AI</span>
+              <div id="btnSpinner" class="spinner" style="display: none;"></div>
+            </button>
+          </form>
+        </div>
+
+        <!-- Food Journal Log Card -->
+        <div class="glass-card journal-card">
+          <div class="journal-header">
+            <h2 class="card-title"><i class="fa-solid fa-calendar-day header-icon"></i> Today's Journal</h2>
+            <button id="clearAllBtn" class="btn btn-text color-danger" title="Clear all logs for today">
+              <i class="fa-solid fa-trash-can"></i> Clear All
+            </button>
+          </div>
+          
+          <!-- Journal Empty State -->
+          <div id="emptyJournalState" class="empty-state">
+            <div class="empty-icon">
+              <i class="fa-solid fa-apple-whole"></i>
+            </div>
+            <h3>Your journal is empty</h3>
+            <p>Log a food item above using AI to see your breakdown.</p>
+          </div>
+          
+          <!-- Journal Food List -->
+          <div id="journalList" class="journal-list" style="display: none;">
+            <!-- Grouped meal items populated dynamically -->
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay" style="display: none;">
+      <div class="glass-card modal-content">
+        <div class="modal-header">
+          <h2><i class="fa-solid fa-sliders header-icon"></i> Configuration</h2>
+          <button id="closeSettingsBtn" class="close-modal-btn">&times;</button>
+        </div>
+        
+        <form id="settingsForm" class="modal-form">
+          <!-- Calorie Target -->
+          <div class="form-group">
+            <label for="settingsCalorieGoal">Daily Calorie Target (kcal)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-bullseye input-icon"></i>
+              <input type="number" id="settingsCalorieGoal" value="2000" min="500" max="10000" required>
+            </div>
+          </div>
+          
+          <!-- Diet Preset Ratio Selector -->
+          <div class="form-group">
+            <label for="settingsDietPreset">Dietary Macro Ratio Profile</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-wheat-awn-circle-exclamation input-icon"></i>
+              <select id="settingsDietPreset">
+                <option value="balanced">Balanced (30% P / 45% C / 25% F)</option>
+                <option value="high-protein">High Protein (40% P / 30% C / 30% F)</option>
+                <option value="low-carb">Low Carb (35% P / 15% C / 50% F)</option>
+                <option value="keto">Keto (20% P / 5% C / 75% F)</option>
+                <option value="custom">Custom Ratios...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Custom Ratios Inputs (Only shown when "custom" is selected) -->
+          <div id="customRatiosContainer" class="custom-ratios-grid" style="display: none;">
+            <div class="form-group">
+              <label for="customProteinRatio">Protein %</label>
+              <input type="number" id="customProteinRatio" class="custom-ratio-input" value="30" min="0" max="100">
+            </div>
+            <div class="form-group">
+              <label for="customCarbsRatio">Carbs %</label>
+              <input type="number" id="customCarbsRatio" class="custom-ratio-input" value="45" min="0" max="100">
+            </div>
+            <div class="form-group">
+              <label for="customFatRatio">Fats %</label>
+              <input type="number" id="customFatRatio" class="custom-ratio-input" value="25" min="0" max="100">
+            </div>
+            <div class="span-3 text-right">
+              <span id="customRatiosTotalLabel" class="ratio-total-label">Total: 100%</span>
+            </div>
+          </div>
+          
+          <!-- AI Model Selection -->
+          <div class="form-group">
+            <label for="settingsModel">OpenRouter AI Model</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-robot input-icon"></i>
+              <select id="settingsModel">
+                <option value="google/gemini-2.5-flash">google/gemini-2.5-flash (Fast, recommended)</option>
+                <option value="meta-llama/llama-3-8b-instruct:free">meta-llama/llama-3-8b-instruct:free (Free model)</option>
+                <option value="google/gemini-2.5-pro">google/gemini-2.5-pro (High quality)</option>
+                <option value="openrouter/auto">OpenRouter Auto (Automatic route)</option>
+              </select>
+            </div>
+            <p class="input-hint">Flash models are optimal for quick nutrition analysis.</p>
+          </div>
+          
+          <!-- OpenRouter API Key -->
+          <div class="form-group">
+            <div class="label-row">
+              <label for="settingsApiKey">OpenRouter API Key</label>
+              <button type="button" id="toggleApiKeyVisibility" class="btn btn-text">
+                <i class="fa-solid fa-eye-slash" id="apiKeyEyeIcon"></i> Show Key
+              </button>
+            </div>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-key input-icon"></i>
+              <input type="password" id="settingsApiKey" placeholder="sk-or-v1-..." required>
+            </div>
+            <p class="input-hint">Your API key is saved locally in your browser's secure cache.</p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="modal-actions">
+            <button type="button" id="cancelSettingsBtn" class="btn btn-secondary">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Toast notifications system -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <!-- Load Local Database first -->
+  <script src="food-db.js"></script>
+  <!-- Load API Config (gitignored) -->
+  <script src="config.js"></script>
+  <!-- Load Main Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
