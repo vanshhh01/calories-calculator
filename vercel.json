@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/nutrition.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}

@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- STATE SYSTEM ---
   const state = {
     dailyGoal: 2000,
-    apiKey: (typeof CONFIG !== 'undefined' && CONFIG.API_KEY) ? CONFIG.API_KEY : "YOUR_API_KEY_HERE",
+    // API key is no longer stored client-side — managed via Vercel serverless function
     selectedModel: "google/gemini-2.5-flash",
     loggedMeals: [],
     magicTheme: false,
@@ -87,9 +87,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const customFatRatio = document.getElementById("customFatRatio");
   const customRatiosTotalLabel = document.getElementById("customRatiosTotalLabel");
   const settingsModel = document.getElementById("settingsModel");
-  const settingsApiKey = document.getElementById("settingsApiKey");
-  const toggleApiKeyVisibility = document.getElementById("toggleApiKeyVisibility");
-  const apiKeyEyeIcon = document.getElementById("apiKeyEyeIcon");
   const themeToggleBtn = document.getElementById("themeToggleBtn");
   const toastContainer = document.getElementById("toastContainer");
 
@@ -99,7 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- LOCAL STORAGE & INIT ---
   function loadState() {
     const savedGoal = localStorage.getItem("glowcal_daily_goal");
-    const savedApiKey = localStorage.getItem("glowcal_api_key");
     const savedModel = localStorage.getItem("glowcal_selected_model");
     const savedMeals = localStorage.getItem("glowcal_logged_meals");
     const savedTheme = localStorage.getItem("glowcal_magic_theme");
@@ -108,7 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const savedCustomRatios = localStorage.getItem("glowcal_custom_ratios");
 
     if (savedGoal) state.dailyGoal = parseInt(savedGoal, 10);
-    if (savedApiKey) state.apiKey = savedApiKey;
     if (savedModel) state.selectedModel = savedModel;
     if (savedMeals) state.loggedMeals = JSON.parse(savedMeals);
     if (savedTheme) state.magicTheme = savedTheme === "true";
@@ -119,7 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Apply Settings parameters
     settingsCalorieGoal.value = state.dailyGoal;
     settingsModel.value = state.selectedModel;
-    settingsApiKey.value = state.apiKey;
     settingsDietPreset.value = state.dietPreset;
     
     customProteinRatio.value = state.customRatios.protein;
@@ -144,7 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveState() {
     localStorage.setItem("glowcal_daily_goal", state.dailyGoal);
-    localStorage.setItem("glowcal_api_key", state.apiKey);
     localStorage.setItem("glowcal_selected_model", state.selectedModel);
     localStorage.setItem("glowcal_logged_meals", JSON.stringify(state.loggedMeals));
     localStorage.setItem("glowcal_magic_theme", state.magicTheme);
@@ -204,7 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
   openSettingsBtn.addEventListener("click", () => {
     settingsCalorieGoal.value = state.dailyGoal;
     settingsModel.value = state.selectedModel;
-    settingsApiKey.value = state.apiKey;
     settingsDietPreset.value = state.dietPreset;
     
     customProteinRatio.value = state.customRatios.protein;
@@ -232,18 +224,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === settingsModal) closeSettings();
   });
 
-  // Toggle API key visibility
-  toggleApiKeyVisibility.addEventListener("click", () => {
-    if (settingsApiKey.type === "password") {
-      settingsApiKey.type = "text";
-      apiKeyEyeIcon.className = "fa-solid fa-eye";
-      toggleApiKeyVisibility.innerHTML = `<i class="fa-solid fa-eye"></i> Hide Key`;
-    } else {
-      settingsApiKey.type = "password";
-      apiKeyEyeIcon.className = "fa-solid fa-eye-slash";
-      toggleApiKeyVisibility.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Show Key`;
-    }
-  });
 
   // Preset Ratio Changed
   settingsDietPreset.addEventListener("change", (e) => {
@@ -287,7 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     state.dailyGoal = parseInt(settingsCalorieGoal.value, 10);
     state.selectedModel = settingsModel.value;
-    state.apiKey = settingsApiKey.value.trim();
     state.dietPreset = settingsDietPreset.value;
 
     if (state.dietPreset === "custom") {
@@ -633,85 +612,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- OPENROUTER API CLIENT ---
+  // --- NUTRITION API CLIENT (calls our secure Vercel serverless proxy) ---
   async function queryOpenRouterCalorie(foodName, portionSize) {
-    if (!state.apiKey) {
-      throw new Error("No API key configured. Please input an OpenRouter API key in settings.");
-    }
-
-    const payload = {
-      model: state.selectedModel,
-      messages: [
-        {
-          role: "system",
-          content: `You are an expert nutritionist AI. Your task is to calculate the nutritional information for the food entered.
-You must respond with ONLY a valid, single JSON block, without code fences (like \`\`\`json) or extra text.
-The JSON must have this exact shape:
-{
-  "foodName": "Normalized name of food",
-  "portionAnalyzed": "Brief serving size description (e.g. 150g, 1 slice)",
-  "calories": 150,
-  "protein": 5.5,
-  "carbs": 24.2,
-  "fat": 4.1
-}
-Only output raw JSON. Estimate based on standard nutritional profiles if the portion size is slightly generic.`
-        },
-        {
-          role: "user",
-          content: `Analyze this food: "${foodName}", portion: "${portionSize}".`
-        }
-      ],
-      temperature: 0.1,
-      max_tokens: 300
-    };
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    // Calls /api/nutrition — a serverless function that securely proxies to OpenRouter
+    // The OPENROUTER_API_KEY is stored as a Vercel environment variable, never in the browser
+    const response = await fetch("/api/nutrition", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${state.apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/antigravity-ai",
-        "X-Title": "GlowCal Calories Calculator"
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        model: state.selectedModel,
+        foodName,
+        portionSize
+      })
     });
 
     if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`OpenRouter API error (HTTP ${response.status}): ${errText || 'Unknown error'}`);
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `API error (HTTP ${response.status})`);
     }
 
-    const data = await response.json();
-    if (!data.choices || data.choices.length === 0) {
-      throw new Error("Invalid response format received from OpenRouter API.");
-    }
+    const parsedData = await response.json();
 
-    let resultText = data.choices[0].message.content.trim();
-    resultText = resultText.replace(/^\s*```(json)?/i, "").replace(/```\s*$/, "").trim();
+    // Normalize numeric types just in case
+    parsedData.calories = typeof parsedData.calories === "number" ? parsedData.calories : parseFloat(parsedData.calories) || 0;
+    parsedData.protein  = typeof parsedData.protein  === "number" ? parsedData.protein  : parseFloat(parsedData.protein)  || 0;
+    parsedData.carbs    = typeof parsedData.carbs    === "number" ? parsedData.carbs    : parseFloat(parsedData.carbs)    || 0;
+    parsedData.fat      = typeof parsedData.fat      === "number" ? parsedData.fat      : parseFloat(parsedData.fat)      || 0;
 
-    try {
-      const parsedData = JSON.parse(resultText);
-      
-      // Basic schema validations
-      if (typeof parsedData.calories !== "number") {
-        parsedData.calories = parseFloat(parsedData.calories) || 0;
-      }
-      if (typeof parsedData.protein !== "number") {
-        parsedData.protein = parseFloat(parsedData.protein) || 0;
-      }
-      if (typeof parsedData.carbs !== "number") {
-        parsedData.carbs = parseFloat(parsedData.carbs) || 0;
-      }
-      if (typeof parsedData.fat !== "number") {
-        parsedData.fat = parseFloat(parsedData.fat) || 0;
-      }
-
-      return parsedData;
-    } catch (parseError) {
-      console.error("Failed to parse JSON response:", resultText);
-      throw new Error("Could not parse nutrition data structure. LLM returned malformed content.");
-    }
+    return parsedData;
   }
 
   // Fallback to local estimation if offline or API key fails
@@ -770,17 +700,12 @@ Only output raw JSON. Estimate based on standard nutritional profiles if the por
     try {
       let nutritionResult;
       
-      if (!state.apiKey) {
-        showToast("No API Key detected. Estimating locally...", "info");
+      try {
+        nutritionResult = await queryOpenRouterCalorie(foodName, portionSize);
+      } catch (apiError) {
+        console.warn("Serverless API failed, falling back to local database...", apiError);
+        showToast("AI lookup failed. Using local database fallback.", "warning");
         nutritionResult = performLocalFallbackEstimation(foodName, portionSize);
-      } else {
-        try {
-          nutritionResult = await queryOpenRouterCalorie(foodName, portionSize);
-        } catch (apiError) {
-          console.warn("OpenRouter API Failed, falling back to local database...", apiError);
-          showToast("API Query failed. Using database fallback.", "warning");
-          nutritionResult = performLocalFallbackEstimation(foodName, portionSize);
-        }
       }
 
       // Add to logged meals

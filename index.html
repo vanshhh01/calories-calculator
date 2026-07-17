@@ -316,19 +316,14 @@
             <p class="input-hint">Flash models are optimal for quick nutrition analysis.</p>
           </div>
           
-          <!-- OpenRouter API Key -->
+          <!-- OpenRouter API Key — Now server-managed -->
           <div class="form-group">
-            <div class="label-row">
-              <label for="settingsApiKey">OpenRouter API Key</label>
-              <button type="button" id="toggleApiKeyVisibility" class="btn btn-text">
-                <i class="fa-solid fa-eye-slash" id="apiKeyEyeIcon"></i> Show Key
-              </button>
+            <label>OpenRouter API Key</label>
+            <div class="input-wrapper" style="cursor: default; opacity: 0.7;">
+              <i class="fa-solid fa-shield-halved input-icon"></i>
+              <input type="text" value="●●●●●●●● Managed securely on server" disabled style="cursor: default; letter-spacing: 0.02em;">
             </div>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-key input-icon"></i>
-              <input type="password" id="settingsApiKey" placeholder="sk-or-v1-..." required>
-            </div>
-            <p class="input-hint">Your API key is saved locally in your browser's secure cache.</p>
+            <p class="input-hint"><i class="fa-solid fa-circle-check" style="color: var(--color-success, #22c55e);"></i> Your API key is stored as a Vercel environment variable — never exposed to the browser.</p>
           </div>
 
           <!-- Action Buttons -->
